@@ -4,6 +4,9 @@
 #include <chrono>
 #include <string>
 #include <vector> 
+#include <atomic>
+
+
 
 
 using namespace std;
@@ -23,8 +26,7 @@ DynamicCube create_cube(int size) {
 
 
 void insert(DynamicCube& cube, int size) {
-    int half = size / 2;
-
+    int half = size / 2;    
     for (int y = -half; y <= half; y++) {
         for (int x = -half; x <= half; x++) {
             for (int z = -half; z <= half; z++) {
@@ -33,12 +35,9 @@ void insert(DynamicCube& cube, int size) {
 
                 p.x = x;
                 p.y = y;
-                p.z = z;
+                p.z = z ;
 
-                int borders =
-                    (abs(x) == half) +
-                    (abs(y) == half) +
-                    (abs(z) == half);
+                int borders = (abs(x) == half) + (abs(y) == half) +(abs(z) == half);
 
                 p.regdol = borders >= 2;
 
@@ -84,7 +83,7 @@ void rotation_x(float angle, DynamicCube& cube, int size) {
     }
 }
 
-void print(DynamicCube& a, int size) {
+void print(DynamicCube& a, int size,const int & qu_z) {
     string frame;
     int half = size / 2;
 
@@ -109,7 +108,7 @@ void print(DynamicCube& a, int size) {
 
             if (found) {
                 float t = (max_z + (float)half) / (float)size;
-                int color = 231 + round(t * (254 - 231));
+                int color = 231 + round(t * (254 - 231)) - qu_z;
 
                 if (color > 254) color = 254;
                 if (color < 231) color = 231;
@@ -125,30 +124,67 @@ void print(DynamicCube& a, int size) {
     cout << frame;
 }
 
+void input(atomic<char>& b) {
+    while (true) {
+        char c;
+        cin >> c;
+        b = c;
+    }
+}
+
+void back(int& size, atomic<char>& b,int &qu_z) {
+
+    qu_z += 2;
+
+    if (size > 3)
+        size -= 2;
+
+    b = ' ';
+}
+void up(int& size, atomic<char>& b,int &qu_z) {
+    qu_z -= 2;
+    if (size < 30)
+        size += 2;
+
+    b = ' ';
+}
+
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    cout << "\033[2J";
-    float angle = 0;
+    atomic<char> b{' '};
 
+    float angle = 0;
     int size = 15;
+    int quality_z = 0;
+
+    thread t(input, ref(b));
+    t.detach();
+
     while (true) {
+
         DynamicCube cube = create_cube(size);
 
-        insert(cube,size);
+        insert(cube, size);
 
         rotation_x(angle, cube, size);
         rotation_y(angle, cube, size);
 
         cout << "\033[H";
 
-        print(cube,size);
+        print(cube, size,quality_z);
 
         angle += 3;
 
         if (angle >= 360)
             angle = 0;
+
+        if (b == 's')
+            back(size, b,quality_z);
+        if (b == 'w')
+            up(size, b,quality_z);
+
+        this_thread::sleep_for(chrono::milliseconds(30));
     }
-    return 0;
 }
