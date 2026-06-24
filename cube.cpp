@@ -31,6 +31,12 @@ void move_to_x(int &qu_x,atomic<char>& b,bool flag){
     b = ' ';
 }
 
+void move_to_y(int &qu_x,atomic<char>& b,bool flag){
+    if(!flag)qu_x -= 2;
+    else if(flag)qu_x += 2;
+    b = ' ';
+}
+
 
 void insert(DynamicCube& cube, int size) {
     int half = size / 2;    
@@ -90,7 +96,7 @@ void rotation_x(float angle, DynamicCube& cube, int size) {
     }
 }
 
-void print(DynamicCube& a, int size,const int & qu_z,const int & qu_x) {
+void print(DynamicCube& a, int size,const int & qu_z,const int & qu_x,const int & qu_y) {
     string frame;
     int half = size / 2;
 
@@ -104,7 +110,7 @@ void print(DynamicCube& a, int size,const int & qu_z,const int & qu_x) {
                 for (int j = 0; j < size; j++) {
                     for (int k = 0; k < size; k++) {
                         int px = round(a[i][j][k].x - qu_x);
-                        int py = round(a[i][j][k].y);
+                        int py = round(a[i][j][k].y - qu_y);
 
                         if (px == x && py == y) {
                             if (!found || a[i][j][k].z > max_z) {found = true;max_z = a[i][j][k].z;regd = a[i][j][k].regdol;}
@@ -166,6 +172,7 @@ int main() {
     int size = 15;
     int quality_z = 0;
     int quality_x = 0;
+    int quality_y = 0;
 
     thread t(input, ref(b));
     t.detach();
@@ -181,7 +188,7 @@ int main() {
 
         cout << "\033[H";
 
-        print(cube, size,quality_z,quality_x);
+        print(cube, size,quality_z,quality_x,quality_y);
 
         angle += 3;
 
@@ -190,6 +197,10 @@ int main() {
 
         if (b == 's')
             back(size, b,quality_z);
+        if (b == 'i')
+            move_to_y(quality_y,b,true);
+        if (b == 'k')
+            move_to_y(quality_y,b,false);
         if (b == 'w')
             up(size, b,quality_z);
         if (b == 'd')
